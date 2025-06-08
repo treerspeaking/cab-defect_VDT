@@ -1,0 +1,24 @@
+
+
+lr: 0.03
+ramp_down_length: 330
+# you could either set by epochs or steps, set step to none to disable
+epochs: 300
+steps: -1
+method: "supervised"
+
+# adam_beta_1: 0.9
+# adam_beta_2_during_ramp_up: 0.99
+# adam_beta_2_after_ramp_up: 0.99
+val_check_interval: 13
+momentum: 0.9
+weight_decay: 0.002
+nesterov: false
+in_channels: 3
+
+# arguments for model
+network: MobileNetV3
+labeled_batch_size: 32
+val_batch_size: 200
+# dilations: [6, 12, 18]
+exclude_unlabeled: false

@@ -1,0 +1,1 @@
+python -m methods.supervised --config configs/supervised.yaml

@@ -12,6 +12,81 @@
             "program": "${file}",
             "console": "integratedTerminal",
             "justMyCode": true
-        }
+        },
+        {
+            "name": "fixmatch.py",
+            "type": "debugpy",
+            "request": "launch",
+            // "program": "train.py",
+            "module": "methods.fixmatch", // Use the module key
+            "console": "integratedTerminal",
+            "justMyCode": false,
+            "args": [
+                "--config",
+                "configs/fixmatch.yaml"
+            ]
+        },
+        {
+            "name": "fixmatch_base.py",
+            "type": "debugpy",
+            "request": "launch",
+            // "program": "train.py",
+            "module": "methods.fixmatch_base", // Use the module key
+            "console": "integratedTerminal",
+            "justMyCode": false,
+            "args": [
+                "--config",
+                "configs/fixmatch_base.yaml"
+            ]
+        },
+        {
+            "name": "freematch_base.py",
+            "type": "debugpy",
+            "request": "launch",
+            // "program": "train.py",
+            "module": "methods.freematch_base", // Use the module key
+            "console": "integratedTerminal",
+            "justMyCode": false,
+            "args": [
+                "--config",
+                "configs/freematch_base.yaml"
+            ]
+        },
+        {
+            "name": "supervised_base.py",
+            "type": "debugpy",
+            "request": "launch",
+            // "program": "train.py",
+            "module": "methods.supervised_base", // Use the module key
+            "console": "integratedTerminal",
+            "justMyCode": false,
+            "args": [
+                "--config",
+                "configs/supervised_base.yaml"
+            ]
+        },
+        {
+            "name": "supervised.py",
+            "type": "debugpy",
+            "request": "launch",
+            // "program": "train.py",
+            "module": "methods.supervised", // Use the module key
+            "console": "integratedTerminal",
+            "justMyCode": false,
+            "args": [
+                "--config",
+                "configs/supervised.yaml"
+            ]
+        },
+        // yolo_test/main.py
+        {
+            "name": "yolo",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "yolo_test/main.py",
+            // "module": "methods.supervised_base", // Use the module key
+            "console": "integratedTerminal",
+            "justMyCode": false,
+        },
     ]
 }

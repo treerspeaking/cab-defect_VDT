@@ -1,0 +1,1 @@
+python -m methods.supervised_base --config ./configs/supervised_base.yaml

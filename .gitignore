@@ -1,3 +1,11 @@
 data
 AI_CAB
 AI_CAB_COPY
+
+*data*
+*AI_CAB*
+*yolo*.pt
+
+lightning_logs
+runs
+!dataset

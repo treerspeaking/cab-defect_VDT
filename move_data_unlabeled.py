@@ -43,24 +43,34 @@ def copy_images_with_prefix(source_folder, destination_folder, ignore_folders=No
     # Walk through all subdirectories
     for root, dirs, files in os.walk(source_path):
         current_folder = Path(root)
-        folder_name = current_folder.as_posix()
-        print(folder_name)
-        # Check if current folder should be ignored
-        if folder_name.lower() in ignore_folders_lower:
-            
-            skipped_folders.add(folder_name)
-            print(f"Skipping ignored folder: {folder_name}")
+        
+        # Get the relative path from source to current folder
+        try:
+            relative_path = current_folder.relative_to(source_path)
+            folder_name = str(relative_path) if str(relative_path) != '.' else 'root'
+        except ValueError:
+            # If relative_to fails, use the folder name
+            folder_name = current_folder.name
+        
+        print(f"Processing folder: {folder_name}")
+        
+        # Check if current folder path should be ignored
+        current_folder_str = str(current_folder)
+        if current_folder_str.lower() in ignore_folders_lower:
+            skipped_folders.add(current_folder_str)
+            print(f"Skipping ignored folder: {current_folder_str}")
             continue
         
         # Check if any parent folder should be ignored
         skip_folder = False
-        for parent in current_folder.parents:
-            if parent.name.lower() in ignore_folders_lower:
+        for ignore_path in ignore_folders:
+            if current_folder_str.startswith(ignore_path):
                 skip_folder = True
-                skipped_folders.add(parent.name)
+                skipped_folders.add(ignore_path)
                 break
         
         if skip_folder:
+            print(f"Skipping folder (parent ignored): {current_folder_str}")
             continue
         
         # Process files in current folder
@@ -70,9 +80,9 @@ def copy_images_with_prefix(source_folder, destination_folder, ignore_folders=No
             
             # Check if file is an image
             if file_extension in [ext.lower() for ext in image_extensions]:
-                # Create new filename with folder prefix
-                folder_prefix = folder_name if folder_name != source_path.name else "root"
-                new_filename = f"{folder_prefix}_{file}"
+                # Create new filename with folder prefix (replace path separators with underscores)
+                safe_folder_prefix = folder_name.replace('/', '_').replace('\\', '_')
+                new_filename = f"{safe_folder_prefix}_{file}"
                 
                 # Handle duplicate filenames by adding a counter
                 counter = 1
@@ -86,7 +96,7 @@ def copy_images_with_prefix(source_folder, destination_folder, ignore_folders=No
                 
                 try:
                     shutil.copy2(file_path, destination_file)
-                    # print(f"Copied: {file} -> {new_filename}")
+                    print(f"Copied: {file} -> {new_filename}")
                     copied_count += 1
                 except Exception as e:
                     print(f"Error copying {file}: {e}")
@@ -101,16 +111,27 @@ def copy_images_with_prefix(source_folder, destination_folder, ignore_folders=No
 # Example usage
 if __name__ == "__main__":
     # Configuration - modify these paths and settings as needed
-    SOURCE_FOLDER = "/home/treerspeaking/src/python/cabdefect/AI_CAB_COPY"
-    DESTINATION_FOLDER = "/home/treerspeaking/src/python/cabdefect/train_data/unlabeled"
+    SOURCE_FOLDER = "/home/treerspeaking/src/python/cabdefect/AI_CAB_COPY_data"
+    DESTINATION_FOLDER = "data_more_label/train_data/unlabeled"
     
     # Folders to ignore (add more as needed)
+    # IGNORED_FOLDERS = [
+    #     '/home/treerspeaking/src/python/cabdefect/AI_CAB_COPY_data/Tủ hộp cáp/Ảnh sai', #han_open
+    #     '/home/treerspeaking/src/python/cabdefect/AI_CAB_COPY_data/Các dây nhảy được đánh số thứ tự/Ảnh đúng', # han_close,
+    #     '/home/treerspeaking/src/python/cabdefect/AI_CAB_COPY_data/Các đầu adapter chưa sử dụng phải có đầu bịt chống bụi', # han_close,
+    #     "/home/treerspeaking/src/python/cabdefect/AI_CAB_COPY_data/Ảnh bộ chia", # chia
+    #     "/home/treerspeaking/src/python/cabdefect/AI_CAB_COPY_data/Ảnh cố định đầu cáp_BD THC", # dau cap
+    #     # "/home/treerspeaking/src/python/cabdefect/AI_CAB_COPY/Ảnh đúng" #box_close,
+    #     "/home/treerspeaking/src/python/cabdefect/AI_CAB_COPY_data/Cắt sai ống lỏng",
+    #     "/home/treerspeaking/src/python/cabdefect/AI_CAB_COPY_data/Ảnh lắp dặt khay hàn, đúng quy cách có đậy nắp/Ảnh sai" # test_data
+    # ]
     IGNORED_FOLDERS = [
-        '/home/treerspeaking/src/python/cabdefect/AI_CAB_COPY/Tủ hộp cáp/Ảnh sai', #han_open
-        '/home/treerspeaking/src/python/cabdefect/AI_CAB_COPY/Các dây nhảy được đánh số thứ tự/Ảnh đúng' # han_close,
-        '/home/treerspeaking/src/python/cabdefect/AI_CAB_COPY/Các đầu adapter chưa sử dụng phải có đầu bịt chống bụi', # han_close,
-        "/home/treerspeaking/src/python/cabdefect/AI_CAB_COPY/Ảnh đúng" #box_close,
-        "/home/treerspeaking/src/python/cabdefect/AI_CAB_COPY/Ảnh lắp dặt khay hàn, đúng quy cách có đậy nắp"
+        "/home/treerspeaking/src/python/cabdefect/AI_CAB_COPY_data/Ảnh cố định đầu cáp_BD THC", # dau cap
+        "/home/treerspeaking/src/python/cabdefect/AI_CAB_COPY_data/Lỗi đi dây ống lỏng bộ chia/ẢNh lỗi",
+        "/home/treerspeaking/src/python/cabdefect/AI_CAB_COPY_data/Tủ hộp cáp/Ảnh sai",
+        "/home/treerspeaking/src/python/cabdefect/AI_CAB_COPY_data/Tủ hộp cáp/Ảnh đúng",
+        "/home/treerspeaking/src/python/cabdefect/AI_CAB_COPY_data/Các đầu adapter chưa sử dụng phải có đầu bịt chống bụi/Ảnh đúng",
+        "/home/treerspeaking/src/python/cabdefect/AI_CAB_COPY_data/Ảnh lắp dặt khay hàn, đúng quy cách có đậy nắp/Ảnh sai" # test_data
     ]
     
     # Image extensions to copy (add more if needed)
@@ -126,7 +147,3 @@ if __name__ == "__main__":
         ignore_folders=IGNORED_FOLDERS,
         image_extensions=IMAGE_EXTENSIONS
     )
-    
-    
-    
-    
