@@ -1,9 +1,10 @@
 
 
-lr: 0.001
-ramp_down_length: 330
+lr: 0.001667
+ramp_down_length: 1050
+ramp_up_length: 30
 # you could either set by epochs or steps, set step to none to disable
-epochs: 300
+epochs: 1000
 steps: -1
 method: "fixmatch"
 threshold: 0.95
@@ -17,9 +18,9 @@ nesterov: false
 in_channels: 3
 
 # arguments for model
-network: MobileNetV3
+network: MobileNetV3Feature
 labeled_batch_size: 4
-unlabeled_batch_size: 8
+unlabeled_batch_size: 4
 val_batch_size: 200
 # dilations: [6, 12, 18]
 exclude_unlabeled: false

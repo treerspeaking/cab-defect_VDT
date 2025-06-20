@@ -1,1 +1,22 @@
-python -m methods.supervised --config configs/supervised.yaml
+# python -m methods.supervised --config configs/supervised.yaml
+# python -m methods.supervised --config configs/supervised.yaml
+# python -m methods.supervised --config configs/supervised.yaml
+# python -m methods.supervised --config configs/supervised.yaml
+# python -m methods.supervised --config configs/supervised.yaml
+# python -m methods.supervised --config configs/supervised_1.yaml
+# python -m methods.supervised --config configs/supervised_1.yaml
+# python -m methods.supervised --config configs/supervised_1.yaml
+# python -m methods.supervised --config configs/supervised_2.yaml
+# python -m methods.supervised --config configs/supervised_2.yaml
+# python -m methods.supervised --config configs/supervised_2.yaml
+# python -m methods.supervised --config configs/supervised.yaml
+python -m methods.supervised --config configs/supervised_full_task.yaml
+# python -m methods.supervised --config configs/supervised.yaml
+# python -m methods.supervised --config configs/supervised.yaml
+# python -m methods.supervised --config configs/supervised.yaml
+# python -m methods.supervised --config configs/supervised_2.yaml
+# python -m methods.supervised --config configs/supervised.yaml
+# python -m methods.supervised --config configs/supervised_2.yaml
+# python -m methods.supervised --config configs/supervised_3.yaml
+# python -m methods.supervised --config configs/supervised_4.yaml
+# python -m methods.supervised --config configs/supervised_5.yaml

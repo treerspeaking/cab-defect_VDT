@@ -56,7 +56,7 @@ class CustomizedDataset(ClassificationDataset):
                 T.ColorJitter(brightness=args.hsv_v, contrast=args.hsv_v, saturation=args.hsv_s, hue=args.hsv_h),
                 T.ToTensor(),
                 T.Normalize(mean=torch.tensor(0), std=torch.tensor(1)),
-                # T.RandomErasing(p=args.erasing, scale=[0.02, 0.05],inplace=True),
+                T.RandomErasing(p=args.erasing, scale=[0.02, 0.05], ratio=[], inplace=True),
             ]
         )
         val_transforms = T.Compose(
@@ -114,7 +114,7 @@ class CustomizedTrainer(ClassificationTrainer):
             p.requires_grad = True  # for training
         return model
 
-model = YOLO("yolo11l-cls.pt")  # load a pretrained model (recommended for training)
+model = YOLO("yolo11n-cls.pt")  # load a pretrained model (recommended for training)
 
 results = model.train(
     data="/home/treerspeaking/src/python/cabdefect/yolo_test/yolo_data", 

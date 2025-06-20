@@ -57,7 +57,7 @@ class FixMatchDataModule(BaseDataModule):
         train_labeled_batch_size=32,
         train_unlabeled_batch_size=8,
         val_batch_size=32,
-        num_workers=4,
+        num_workers=2,
         weak_transforms=None,
         strong_transforms=None,
         val_transforms=None,
@@ -78,7 +78,7 @@ class FixMatchDataModule(BaseDataModule):
             train_data = self.dataset(self.root, split="train", download=False)
             val_data = self.dataset(self.root, split="val", download=False)
             
-            # self._tasks = train_data.tasks
+            self._tasks = train_data.tasks
             
             X_label, X_unlabeled, y_labeled, y_unlabeled = train_data.split_labeled_unlabeled_data(train_data.data, train_data.targets, self.labeled_size, self.seed)
             

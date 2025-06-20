@@ -150,16 +150,16 @@ class BaseDataModule(L.LightningDataModule):
 
     def train_dataloader(self):
         
-        labeled_dataloader = DataLoader(self.labeled_dataset, self.train_labeled_batch_size, True, num_workers=4, pin_memory=True)
+        labeled_dataloader = DataLoader(self.labeled_dataset, self.train_labeled_batch_size, True, num_workers=self.num_workers, pin_memory=True)
         unlabeled_dataloader = DataLoader(self.unlabeled_dataset, self.train_unlabeled_batch_size, True, num_workers=4, pin_memory=True)
         self._steps_per_epochs = max(len(labeled_dataloader), len(unlabeled_dataloader))
         return CombinedLoader([labeled_dataloader, unlabeled_dataloader], mode="max_size_cycle")
 
     def val_dataloader(self):
-        return DataLoader(self.val_dataset, self.val_batch_size, False, num_workers=4, pin_memory=True)
+        return DataLoader(self.val_dataset, self.val_batch_size, False, num_workers=self.num_workers, pin_memory=True)
 
     def test_dataloader(self):
-        return DataLoader(self.test_dataset, self.val_batch_size, False, num_workers=4, pin_memory=True)
+        return DataLoader(self.test_dataset, self.val_batch_size, False, num_workers=self.num_workers, pin_memory=True)
 
     def predict_dataloader(self):
         return self.test_dataloader()

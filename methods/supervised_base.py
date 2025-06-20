@@ -394,7 +394,9 @@ def main():
 
 
     trainer.fit(model=FixMatchBase({
-    'han_box': ['open', 'close']}, cfg), datamodule=data)
+    # 'han_box': ['open', 'close']
+    'co_dinh_cap': ["co_dinh_dung", "co_dinh_sai"]
+    }, cfg), datamodule=data)
 
 if __name__ == "__main__":
     main()

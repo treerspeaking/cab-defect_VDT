@@ -131,7 +131,9 @@ if __name__ == "__main__":
         "/home/treerspeaking/src/python/cabdefect/AI_CAB_COPY_data/Tủ hộp cáp/Ảnh sai",
         "/home/treerspeaking/src/python/cabdefect/AI_CAB_COPY_data/Tủ hộp cáp/Ảnh đúng",
         "/home/treerspeaking/src/python/cabdefect/AI_CAB_COPY_data/Các đầu adapter chưa sử dụng phải có đầu bịt chống bụi/Ảnh đúng",
-        "/home/treerspeaking/src/python/cabdefect/AI_CAB_COPY_data/Ảnh lắp dặt khay hàn, đúng quy cách có đậy nắp/Ảnh sai" # test_data
+        "/home/treerspeaking/src/python/cabdefect/AI_CAB_COPY_data/Ảnh lắp dặt khay hàn, đúng quy cách có đậy nắp/Ảnh sai", # test_data
+        "/home/treerspeaking/src/python/cabdefect/AI_CAB_COPY_data/Ảnh bộ chia"
+        
     ]
     
     # Image extensions to copy (add more if needed)

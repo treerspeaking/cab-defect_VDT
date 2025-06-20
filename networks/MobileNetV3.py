@@ -5,10 +5,11 @@ from collections import OrderedDict
 
 class ModifiedMobileNetV3(nn.Module):
     """
-    Modified MobileNetV3 with customizable layer removal
+    Modified MobileNetV3 with customizable layer removal and support for large resolution images
     """
-    def __init__(self, model_type='large', pretrained=True, remove_layers=None, num_classes = 1000):
+    def __init__(self, model_type='large', pretrained=True, remove_layers=None, num_classes=1000):
         super().__init__()
+        
         
         # Load pretrained MobileNetV3
         if model_type.lower() == 'large':
@@ -21,7 +22,6 @@ class ModifiedMobileNetV3(nn.Module):
                 self.backbone.classifier[3] = torch.nn.Linear(1024, num_classes)
         else:
             raise ValueError("model_type must be 'large' or 'small'")
-        
         
         # Remove specified layers
         if remove_layers:
@@ -41,7 +41,11 @@ class ModifiedMobileNetV3(nn.Module):
             self.backbone.avgpool = nn.Identity()
     
     def forward(self, x):
+        # Automatically handle inputs of any size
         return self.backbone(x)
+    
+    def features(self, x):
+        return self.backbone.features(x)
 
 # Example usage functions
 def example_basic_loading():
@@ -62,6 +66,21 @@ def example_basic_loading():
         
     return model
 
+def example_large_resolution():
+    """Example: Using MobileNetV3 with large resolution images"""
+    # Load pretrained MobileNetV3-Large with support for 640x480 images
+    model = ModifiedMobileNetV3(
+        model_type='large',
+    )
+    
+    # Test forward pass with a large image
+    x = torch.randn(1, 3, 640, 480)
+    with torch.no_grad():
+        features = model(x)
+    print(f"Large resolution output shape: {features.shape}")
+    
+    return model
+
 
 if __name__ == "__main__":
     # Example usage
@@ -69,3 +88,6 @@ if __name__ == "__main__":
     
     # Basic example
     model = example_basic_loading()
+    
+    # Large resolution example
+    # large_model = example_large_resolution()

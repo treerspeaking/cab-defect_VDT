@@ -34,6 +34,23 @@ class ModifiedResNet50(nn.Module):
     
     def forward(self, x):
         return self.backbone(x)
+    
+    def features(self, x):
+        # Get features before the final fully connected layer
+        x = self.backbone.conv1(x)
+        x = self.backbone.bn1(x)
+        x = self.backbone.relu(x)
+        x = self.backbone.maxpool(x)
+        
+        x = self.backbone.layer1(x)
+        x = self.backbone.layer2(x)
+        x = self.backbone.layer3(x)
+        x = self.backbone.layer4(x)
+        
+        # x = self.backbone.avgpool(x)
+        # x = torch.flatten(x, 1)
+        
+        return x
 
 # Example usage functions
 def example_basic_loading():

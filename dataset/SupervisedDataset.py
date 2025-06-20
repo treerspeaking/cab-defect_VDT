@@ -33,6 +33,8 @@ class SupervisedDataModule(L.LightningDataModule):
             train_data = self.dataset(self.root, split="train", download=False)
             val_data = self.dataset(self.root, split="val", download=False)
             
+            self._tasks = train_data.tasks
+            
             X_label, X_unlabeled, y_label, y_unlabeled = train_data.split_labeled_unlabeled_data(train_data.data, train_data.targets)
             
             self.train_dataset = BasicLabelDataset(X_label, y_label, self.train_transforms)

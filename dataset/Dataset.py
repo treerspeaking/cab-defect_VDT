@@ -14,7 +14,7 @@ import torch
 from torchvision import datasets
 from torch.utils.data import Dataset, DataLoader
 from torchvision.transforms import v2
-from torchvision.datasets import CIFAR10
+from torchvision.datasets import CIFAR10, SVHN
 from torchvision.transforms.v2 import Transform
 from torchvision.datasets.utils import check_integrity, download_url, verify_str_arg
 import lightning as L
