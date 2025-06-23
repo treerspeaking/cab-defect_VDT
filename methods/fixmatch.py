@@ -35,8 +35,8 @@ cfg = yaml.load(open("/home/treerspeaking/src/python/cabdefect/configs/fixmatch.
 
 weak_aug = v2.Compose([
     v2.ToTensor(),
-    v2.Resize([672, 672]),
-    v2.CenterCrop([512, 512]),
+    # v2.Resize([672, 672]),
+    v2.Resize([512, 512]),
     v2.Normalize(mean=[0.485, 0.456, 0.406],
                          std=[0.229, 0.224, 0.225]),
     v2.RandomAffine(degrees=0, translate=(0.0625, 0.0625)),
@@ -46,9 +46,12 @@ weak_aug = v2.Compose([
 
 strong_aug = v2.Compose([
     v2.ToTensor(),
-    v2.Resize([672, 672]),
-    v2.CenterCrop([512, 512]),
+    # v2.Resize([672, 672]),
+    v2.Resize([512, 512]),
     v2.RandAugment(),
+    v2.RandomHorizontalFlip(),
+    v2.RandomVerticalFlip(),
+    v2.RandomAffine(degrees=0, translate=(0.0625, 0.0625)),
     v2.Normalize(mean=[0.485, 0.456, 0.406],
                          std=[0.229, 0.224, 0.225]),
 ])
@@ -56,8 +59,8 @@ strong_aug = v2.Compose([
                                   
 test_aug = transforms=v2.Compose([
     v2.ToTensor(),
-    v2.Resize([672, 672]),
-    v2.CenterCrop([512, 512]),
+    # v2.Resize([672, 672]),
+    v2.Resize([512, 512]),
     v2.Normalize(mean=[0.485, 0.456, 0.406],
                          std=[0.229, 0.224, 0.225]),
 ])
@@ -457,11 +460,12 @@ def main():
     
 
     checkpoint_callback = ModelCheckpoint(
-        monitor="val/total_loss",  # Monitor validation accuracy
-        save_top_k=100,           # Save the top 3 models
-        every_n_epochs=25,
-        mode="min",             # "max" because we want to maximize accuracy
-        filename="supervised{epoch:02d}-{val/accuracy:.4f}-{val/total_loss}",  # Filename pattern
+        monitor="val/accuracy",  # Monitor validation accuracy
+        # monitor="val/accuracy",  # Monitor validation accurac
+        save_top_k=10,           # Save the top 3 models
+        # every_n_epochs=25,
+        mode="max",             # "max" because we want to maximize accuracy
+        filename="supervised{epoch:02d}-{step}-{val/accuracy:.4f}-{val/total_loss}",  # Filename pattern
         save_last=True,         # Additionally save the last model
     )
     
@@ -483,7 +487,7 @@ def main():
         train_labeled_batch_size=cfg["labeled_batch_size"], 
         train_unlabeled_batch_size=cfg["unlabeled_batch_size"], 
         val_batch_size=cfg["val_batch_size"], 
-        num_workers=2, 
+        num_workers=4, 
         weak_transforms=weak_aug,
         strong_transforms=strong_aug,
         val_transforms=test_aug, 

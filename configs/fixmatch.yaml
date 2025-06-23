@@ -1,8 +1,8 @@
 
 
 lr: 0.001667
-ramp_down_length: 1050
-ramp_up_length: 30
+ramp_down_length: 1300
+ramp_up_length: 100
 # you could either set by epochs or steps, set step to none to disable
 epochs: 1000
 steps: -1

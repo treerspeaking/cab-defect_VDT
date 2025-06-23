@@ -29,8 +29,8 @@ NO_LABEL = -1
 # Define augmentations for training and validation
 train_aug = v2.Compose(
             [
-                v2.Resize([720, 720]),
-                v2.CenterCrop([512, 512]),
+                # v2.Resize([640, 640]),
+                v2.Resize([512, 512]),
                 v2.RandomHorizontalFlip(p=0.5),
                 v2.RandomVerticalFlip(p=0.5),
                 v2.RandomAffine(0, [0.1, 0.1], shear=0),
@@ -47,8 +47,8 @@ train_aug = v2.Compose(
                                   
 val_aug = v2.Compose([
     v2.ToTensor(),
-    v2.Resize([720, 720]),
-    v2.CenterCrop([512, 512]),
+    # v2.Resize([640, 640]),
+    v2.Resize([512, 512]),
     # v2.GaussianNoise(sigma=0.2),
     # v2.RandomHorizontalFlip(p=0.5),
     # v2.RandomVerticalFlip(p=0.5),
@@ -390,7 +390,7 @@ class SupervisedModel(L.LightningModule):
         if (steps < self.ramp_up_length):
             return sigmoid_ramp_up(steps, self.ramp_up_length)
         else:
-            return cosine_ramp_down(steps, self.ramp_down_length, out_multiplier=0.5, in_multiplier=0.4375)
+            return cosine_ramp_down(steps - self.ramp_up_length, self.ramp_down_length - self.ramp_up_length, out_multiplier=0.5, in_multiplier=0.4375)
 
     def configure_optimizers(self):
         # optimizer = torch.optim.SGD(self.parameters(), self.lr,
@@ -487,7 +487,7 @@ def main():
         batch_size=cfg.get("batch_size", cfg.get("labeled_batch_size", 32)),
         # val_batch_size=cfg.get("val_batch_size", 32), 
         val_batch_size=200, 
-        num_workers=2, 
+        num_workers=3, 
         train_transforms=train_aug,
         val_transforms=val_aug, 
         test_transforms=val_aug, 

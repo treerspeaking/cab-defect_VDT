@@ -78,6 +78,15 @@
                 "configs/supervised.yaml"
             ]
         },
+        {
+            "name": "web.py",
+            "type": "debugpy",
+            "request": "launch",
+            // "program": "train.py",
+            "module": "web.app", // Use the module key
+            "console": "integratedTerminal",
+            "justMyCode": false,
+        },
         // yolo_test/main.py
         {
             "name": "yolo",
