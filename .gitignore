@@ -12,7 +12,7 @@ runs
 test.ipynb
 *.jpg
 *.jpeg
-*.png
+.png
 *.gif
 *.bmp
 *.tiff
