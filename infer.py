@@ -1,113 +1,133 @@
-
+import os
+import argparse
 import numpy as np
-
 import matplotlib.pyplot as plt
-import matplotlib.cm as cm
-from PIL import Image
-
 import cv2
-import numpy as np
-from methods.fixmatch import FixMatch
-from dataset.Dataset import MultiTaskCabDataset
+import torch
+from PIL import Image
+from torch.utils.data import DataLoader
 from torchvision.transforms import v2
 
-trans = v2.Compose([
-    v2.ToTensor(),
-    v2.Resize([224, 224]),
-    v2.Normalize(mean=[0.485, 0.456, 0.406],
-                         std=[0.229, 0.224, 0.225]),
-])
+from methods.supervised import SupervisedModel
+from dataset.Dataset import MultiTaskCabDataset
+from dataset.BaseDataset import BasicLabelDataset
 
-trans_view = v2.Compose([
-    v2.ToTensor(),
-    v2.Resize([224, 224]),
-])
+def parse_args():
+    parser = argparse.ArgumentParser(description='Generate and save CAM visualizations')
+    parser.add_argument('--model_path', type=str, default="/home/treerspeaking/src/python/cabdefect/lightning_logs/version_288/checkpoints/supervisedepoch=411-step=26780-val/accuracy=0.8675-val/total_loss=0.7918075323104858.ckpt",
+                        help='Path to the model checkpoint')
+    parser.add_argument('--data_dir', type=str, default="/home/treerspeaking/src/python/cabdefect/data_more_label",
+                        help='Directory containing the dataset')
+    parser.add_argument('--output_dir', type=str, default="./cam_output",
+                        help='Directory to save visualizations')
+    parser.add_argument('--batch_size', type=int, default=1,
+                        help='Batch size for inference')
+    parser.add_argument('--num_samples', type=int, default=10,
+                        help='Number of samples to process')
+    return parser.parse_args()
 
 def open_image(img_path):
-    return np.array(Image.open(img_path).convert('RGB'))
+    return np.array(Image.open(img_path).convert("RGB"))
 
-def open_and_plot_cam(img_path):
-    # img = trans_view(data.data[pic_num])
-    img = trans_view(open_image(img_path))
-    input = trans(img).unsqueeze(0)
-    cam, out_pred = a(input.to("cuda"))
+def create_data_loader(data_dir, transform, batch_size):
+    data = MultiTaskCabDataset(data_dir, split="test", test_transforms=transform)
+    label_data = BasicLabelDataset(data.data, data.targets, transform)
+    return DataLoader(label_data, batch_size=batch_size, shuffle=False, num_workers=1, pin_memory=True)
+
+def generate_and_save_cam(imgs, labels, model, output_dir, batch_idx, task_dict):
+    os.makedirs(output_dir, exist_ok=True)
     
+    cams, out_preds = model((imgs.to("cuda"), labels))
+    batch_size = imgs.shape[0]
+    num_tasks = cams.shape[1] // 2  # Assuming 2 CAMs per task
 
-    # Create a figure with 2 rows
-    fig, ax = plt.subplots(3, 3, figsize=(12, 10))
+    for idx in range(batch_size):
+        img = imgs[idx]
+        cam = cams[idx]  # shape: [num_tasks*2, H, W]
+        
+        # Undo normalization for display
+        original_img = img.permute(1, 2, 0).cpu().numpy()
+        mean = np.array([0.485, 0.456, 0.406])
+        std = np.array([0.229, 0.224, 0.225])
+        original_img = std * original_img + mean
+        original_img = np.clip(original_img, 0, 1)
 
-    # First row - Original visualization
-    # Original image
-    ax[0, 0].imshow(img.permute(1, 2, 0))
-    ax[0, 0].set_title('Original Image')
-    ax[0, 0].axis('off')
+        # Create a visualization figure
+        fig, ax = plt.subplots(num_tasks, 4, figsize=(20, 5 * (num_tasks + 1)))
+        if num_tasks == 1:
+            ax = np.expand_dims(ax, 0)  # Ensure ax is 2D
 
-    # CAM visualization for class 0 and 1
-    ax[0, 1].imshow(cam[0, 0].detach().cpu())
-    ax[0, 1].set_title('CAM - Class 0')
-    ax[0, 1].axis('off')
+        sample_filename = f"sample_{batch_idx}_{idx}"
 
-    ax[0, 2].imshow(cam[0, 1].detach().cpu())
-    ax[0, 2].set_title('CAM - Class 1')
-    ax[0, 2].axis('off')
+        for task_idx, (k, v) in enumerate(task_dict.items()):
+            # First column: original image
+            ax[task_idx, 0].imshow(original_img)
+            ax[task_idx, 0].set_title('Original Image')
+            ax[task_idx, 0].axis('off')
 
-    # Second row - Overlay visualizations
-    # Create normalized CAMs for overlays
+            # Next columns: CAM overlays
+            for class_idx in range(2):
+                cam_map = cam[task_idx * 2 + class_idx].detach().cpu().numpy()
+                cam_map = cv2.resize(cam_map, dsize=(512, 512))
+                cam_map = (cam_map - cam_map.min()) / (cam_map.max() - cam_map.min() + 1e-8)
+                ax[task_idx, class_idx + 1].imshow(original_img)
+                ax[task_idx, class_idx + 1].imshow(cam_map, cmap='jet', alpha=0.5)
+                ax[task_idx, class_idx + 1].set_title(f'Task {k} - CAM Overlay - Class {v[class_idx]}')
+                ax[task_idx, class_idx + 1].axis('off')
+            
+            cam1 = cam[task_idx * 2 + 0].detach().cpu().numpy()
+            cam2 = cam[task_idx * 2 + 1].detach().cpu().numpy()
+            decision_cam_map = cam1 + cam2
 
-    cam_0 = cv2.resize(cam[0, 0].detach().cpu().numpy(), dsize=[224, 224])
-    cam_1 = cv2.resize( cam[0, 1].detach().cpu().numpy(), dsize=(224, 224))
+            cam_map = cv2.resize(decision_cam_map, dsize=(512, 512))
+            cam_map = (cam_map - cam_map.min()) / (cam_map.max() - cam_map.min() + 1e-8)
+            ax[task_idx, 3].imshow(original_img)
+            ax[task_idx, 3].imshow(cam_map, cmap='jet', alpha=0.5)
+            ax[task_idx, 3].set_title(f'Combine activation')
+            ax[task_idx, 3].axis('off')
 
-    # Normalize CAMs to 0-1 range for visualization
-    cam_0 = (cam_0 - cam_0.min()) / (cam_0.max() - cam_0.min())
-    cam_1 = (cam_1 - cam_1.min()) / (cam_1.max() - cam_1.min())
+        plt.tight_layout()
+        plt.savefig(os.path.join(output_dir, f"{sample_filename}_visualization.png"), dpi=300)
+        plt.close(fig)
 
-    # Overlay CAM on original image
-    original_img = img.permute(1, 2, 0).numpy()
-    ax[1, 1].imshow(original_img)
-    cam_0_heatmap = ax[1, 1].imshow(cam_0, cmap='jet', alpha=0.5)
-    ax[1, 1].set_title('Class 0 CAM Overlay task 0')
-    ax[1, 1].axis('off')
+def main():
+    args = parse_args()
+    
+    # Create output directory if it doesn't exist
+    os.makedirs(args.output_dir, exist_ok=True)
+    
+    # Load model
+    model_used = SupervisedModel.load_from_checkpoint(args.model_path)
+    model_used.eval()
+    model_used.to("cuda")
+    
+    # Define transforms
+    trans = v2.Compose([
+        v2.ToTensor(),
+        v2.Resize([512, 512]),
+        v2.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+    ])
+    
+    # Define task dictionary
+    task_dict = {
+        'co_dinh_cap': ['co_dinh_dung', 'co_dinh_sai'], 
+        'bo_chia': ['bo_chia_loi', 'bo_chia_dung'], 
+        'han_box': ['close', 'open']
+    }
+    
+    # Create data loader
+    data_loader = create_data_loader(args.data_dir, trans, args.batch_size)
+    
+    # Process samples
+    print(f"Processing {args.num_samples} samples and saving to {args.output_dir}")
+    with torch.no_grad():
+        for batch_idx, batch in enumerate(data_loader):
+            if batch_idx >= args.num_samples:
+                break
+                
+            imgs, labels = batch
+            generate_and_save_cam(imgs, labels, model_used, args.output_dir, batch_idx, task_dict)
+            print(f"Processed batch {batch_idx+1}/{args.num_samples}")
 
-    ax[1, 2].imshow(original_img)
-    cam_1_heatmap = ax[1, 2].imshow(cam_1, cmap='jet', alpha=0.5)
-    ax[1, 2].set_title('Class 1 CAM Overlay task 1')
-    ax[1, 2].axis('off')
-
-    cam_2 = cv2.resize(cam[0, 2].detach().cpu().numpy(), dsize=[224, 224])
-    cam_3 = cv2.resize( cam[0, 3].detach().cpu().numpy(), dsize=(224, 224))
-
-    # Normalize CAMs to 0-1 range for visualization
-    cam_2 = (cam_2 - cam_2.min()) / (cam_2.max() - cam_2.min())
-    cam_3 = (cam_3 - cam_3.min()) / (cam_3.max() - cam_3.min())
-
-    # Overlay CAM on original image
-    original_img = img.permute(1, 2, 0).numpy()
-    ax[2, 1].imshow(original_img)
-    cam_2_heatmap = ax[2, 1].imshow(cam_2, cmap='jet', alpha=0.5)
-    ax[2, 1].set_title('Class 0 CAM Overlay task 1')
-    ax[2, 1].axis('off')
-
-    ax[2, 2].imshow(original_img)
-    cam_3_heatmap = ax[2, 2].imshow(cam_3, cmap='jet', alpha=0.5)
-    ax[2, 2].set_title('Class 1 CAM Overlay task 1')
-    ax[2, 2].axis('off')
-
-    plt.tight_layout()
-    plt.show()
-    print(f"out_pred: {out_pred}")
-
-
-a = FixMatch.load_from_checkpoint("/home/treerspeaking/src/python/cabdefect/lightning_logs/version_30/checkpoints/epoch=299-step=7500.ckpt")
-
-
-data = MultiTaskCabDataset("data", split="test")
-
-open_and_plot_cam("/home/treerspeaking/src/python/cabdefect/data/test_data/co_dinh_cap/Ảnh sai/53.jpg")
-open_and_plot_cam("/home/treerspeaking/src/python/cabdefect/data/test_data/co_dinh_cap/Ảnh sai/55.jpg")
-open_and_plot_cam("/home/treerspeaking/src/python/cabdefect/data/test_data/co_dinh_cap/Ảnh sai/56.jpg")
-open_and_plot_cam("/home/treerspeaking/src/python/cabdefect/data/test_data/co_dinh_cap/Ảnh sai/57.jpg")
-open_and_plot_cam("/home/treerspeaking/src/python/cabdefect/data/test_data/co_dinh_cap/Ảnh sai/58.jpg")
-open_and_plot_cam("/home/treerspeaking/src/python/cabdefect/data/test_data/co_dinh_cap/Ảnh sai/59.jpg")
-open_and_plot_cam("/home/treerspeaking/src/python/cabdefect/data/test_data/co_dinh_cap/Ảnh sai/60.jpg")
-open_and_plot_cam("/home/treerspeaking/src/python/cabdefect/data/test_data/co_dinh_cap/Ảnh sai/61.jpg")
-open_and_plot_cam("/home/treerspeaking/src/python/cabdefect/data/test_data/co_dinh_cap/Ảnh sai/62.jpg")
+if __name__ == "__main__":
+    main()
